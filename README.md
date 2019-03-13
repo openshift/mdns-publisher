@@ -47,3 +47,11 @@ This program requires a small addition to github.com/grandcat/zeroconf that is u
     $ git checkout celebdor/register-svc-entry
     $ popd
     $ go get -v github.com/metalkube/mdns-publisher
+
+## Building container
+
+    sudo podman build -t your_user/mdns-publisher .
+
+## Runing containerized
+
+    sudo podman run -v /path/with/my/config:/etc/mdns --net host quay.io/metalkube/mdns-publisher
