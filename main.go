@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/metalkube/mdns-publisher/cmd"
+	"github.com/openshift-metalkube/mdns-publisher/cmd"
 )
 
 func main() {
