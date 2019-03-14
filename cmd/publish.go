@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"strings"
 	"sync"
 	"syscall"
 
@@ -16,8 +17,10 @@ import (
 )
 
 type Config struct {
-	BindAddress string              `mapstructure:"bind_address"`
-	Services    []publisher.Service `mapstructure:"service"`
+	BindAddress        string              `mapstructure:"bind_address"`
+	CollisionAvoidance string              `mapstructure:"collision_avoidance"`
+	Debug              bool                `mapstructure:"debug"`
+	Services           []publisher.Service `mapstructure:"service"`
 }
 
 var (
@@ -30,20 +33,37 @@ var publishCmd = &cobra.Command{
 	Use:   "publish",
 	Short: "Publishes mDNS services",
 	Run: func(cmd *cobra.Command, args []string) {
+		if conf.Debug {
+			log.SetLevel(logrus.DebugLevel)
+			publisher.SetLogLevel(logrus.DebugLevel)
+		}
 		ip := net.ParseIP(conf.BindAddress)
+		collisionStrategy, err := publisher.NewCollisionStrategy(conf.CollisionAvoidance)
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"error":           err,
+				"accepted_values": strings.Join(publisher.CollisionStrategies(), " ")}).Fatal("Wrong collision_avoidance")
+		}
+		collisionStrategyName, err := collisionStrategy.String()
+		if err != nil {
+			log.WithFields(logrus.Fields{
+				"error": err,
+			}).Fatal("Failed to get collision avoidance name")
+		}
 		log.WithFields(logrus.Fields{
-			"ip": ip,
-		}).Info("BindAddress")
+			"ip":                  ip,
+			"collision_avoidance": conf.CollisionAvoidance,
+		}).Info("Publishing with settings")
 
 		iface, err := publisher.FindIface(ip)
-		log.WithFields(logrus.Fields{
-			"name": iface.Name,
-		}).Info("Binding interface")
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"ip": ip,
 			}).Fatal("Failed to find interface for specified ip")
 		}
+		log.WithFields(logrus.Fields{
+			"name": iface.Name,
+		}).Info("Binding interface")
 
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
@@ -51,6 +71,14 @@ var publishCmd = &cobra.Command{
 		shutdownChannel := make(chan struct{})
 		for _, service := range conf.Services {
 			waitGroup.Add(1)
+			err = service.AlterName(collisionStrategy)
+			if err != nil {
+				log.WithFields(logrus.Fields{
+					"error":               err,
+					"name":                service.Name,
+					"collision_avoidance": collisionStrategyName,
+				}).Fatal("Failed to apply service name collision avoidance")
+			}
 			log.WithFields(logrus.Fields{
 				"name":     service.Name,
 				"hostname": service.HostName,
@@ -71,6 +99,8 @@ var publishCmd = &cobra.Command{
 }
 
 func initConfig() {
+	viper.SetDefault("collision_avoidance", "inaction")
+	viper.SetDefault("debug", false)
 	if cfgFile != "" {
 		viper.SetConfigFile(cfgFile)
 	} else {
@@ -96,6 +126,8 @@ func initConfig() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	publishCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is /etc/mdns/config.yaml)")
+	publishCmd.PersistentFlags().Bool("debug", true, "Set log level to Debug")
+	viper.BindPFlag("debug", publishCmd.PersistentFlags().Lookup("debug"))
 }
 
 func Execute() {

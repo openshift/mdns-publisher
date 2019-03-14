@@ -9,15 +9,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Service struct {
-	Name     string `mapstructure:"name"`
-	HostName string `mapstructure:"host_name"`
-	SvcType  string `mapstructure:"type"`
-	Domain   string `mapstructure:"domain"`
-	Port     int    `mapstructure:"port"`
-	TTL      uint32 `mapstructure:"ttl"`
-}
-
 var log = logrus.New()
 
 func Publish(ip net.IP, iface net.Interface, service Service, shutdown chan struct{}, waitGroup *sync.WaitGroup) (err error) {
@@ -80,4 +71,8 @@ func FindIface(ip net.IP) (iface net.Interface, err error) {
 		}
 	}
 	return iface, fmt.Errorf("Couldn't find interface with IP address %s", ip)
+}
+
+func SetLogLevel(level logrus.Level) {
+	log.SetLevel(level)
 }
