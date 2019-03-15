@@ -3,6 +3,7 @@ Declare as many services as you need
 for your machine */
 
 bind_address = "192.168.2.21"
+collision_avoidance = "hostname"
 
 service {
     name = "Etcd"
