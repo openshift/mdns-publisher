@@ -5,7 +5,7 @@ import (
 	"net"
 	"sync"
 
-	"github.com/grandcat/zeroconf"
+	"github.com/celebdor/zeroconf"
 	"github.com/sirupsen/logrus"
 )
 
