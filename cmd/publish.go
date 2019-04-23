@@ -10,7 +10,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/openshift-metalkube/mdns-publisher/pkg/publisher"
+	"github.com/openshift-metal3/mdns-publisher/pkg/publisher"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -51,7 +51,7 @@ var publishCmd = &cobra.Command{
 			}).Fatal("Failed to get collision avoidance name")
 		}
 		log.WithFields(logrus.Fields{
-			"ip":                  ip,
+			"ip": ip,
 			"collision_avoidance": conf.CollisionAvoidance,
 		}).Info("Publishing with settings")
 
