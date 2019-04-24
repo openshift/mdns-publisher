@@ -87,7 +87,11 @@ var publishCmd = &cobra.Command{
 				"port":     service.Port,
 				"ttl":      service.TTL,
 			}).Info("Publishing service")
-			go publisher.Publish(ip, iface, service, shutdownChannel, waitGroup)
+			serviceIP := ip
+			if service.AddrIPv4 != "" {
+				serviceIP = net.ParseIP(service.AddrIPv4)
+			}
+			go publisher.Publish(serviceIP, iface, service, shutdownChannel, waitGroup)
 		}
 
 		<-sig

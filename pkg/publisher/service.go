@@ -29,6 +29,7 @@ type Service struct {
 	Domain   string `mapstructure:"domain"`
 	Port     int    `mapstructure:"port"`
 	TTL      uint32 `mapstructure:"ttl"`
+	AddrIPv4 string `mapstructure:"ip"`
 }
 
 func (strategy CollisionStrategy) String() (string, error) {
