@@ -10,7 +10,7 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/openshift-metalkube/mdns-publisher/pkg/publisher"
+	"github.com/openshift/mdns-publisher/pkg/publisher"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

@@ -39,14 +39,7 @@ the mDNS library default *ttl* value is 3200.
 
 ## Building
 
-This program requires a small addition to github.com/grandcat/zeroconf that is under review. Until the PR is merged, in order to build it, do:
-
-    $ go get -v github.com/grandcat/zeroconf
-    $ pushd "${GOPATH}/src/github.com/grandcat/zeroconf"
-    $ git remote add celebdor https://github.com/celebdor/zeroconf
-    $ git checkout celebdor/register-svc-entry
-    $ popd
-    $ go get -v github.com/openshift-metalkube/mdns-publisher
+    $ go get -v github.com/openshift/mdns-publisher
 
 ## Building container
 
@@ -54,4 +47,4 @@ This program requires a small addition to github.com/grandcat/zeroconf that is u
 
 ## Runing containerized
 
-    sudo podman run -v /path/with/my/config:/etc/mdns --net host quay.io/openshift-metalkube/mdns-publisher
+    sudo podman run -v /path/with/my/config:/etc/mdns --net host quay.io/openshift/mdns-publisher
