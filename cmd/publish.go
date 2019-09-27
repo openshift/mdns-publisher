@@ -89,10 +89,15 @@ var publishCmd = &cobra.Command{
 			}).Info("Publishing service")
 			go publisher.Publish(ip, iface, service, shutdownChannel, waitGroup)
 		}
+		ifaceChanged := make(chan struct{})
+		go publisher.IfaceCheck(ip, iface, ifaceChanged)
 
-		<-sig
+		select {
+			case <-sig:
+			case <-ifaceChanged:
+		}
 		close(shutdownChannel)
-		log.Info("SIGTERM received, gracefully shutting down services...")
+		log.Info("Shutdown request received, gracefully shutting down services...")
 		waitGroup.Wait()
 		log.Info("Done!")
 	},

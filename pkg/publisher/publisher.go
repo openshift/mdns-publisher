@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"github.com/celebdor/zeroconf"
 	"github.com/sirupsen/logrus"
@@ -71,6 +72,22 @@ func FindIface(ip net.IP) (iface net.Interface, err error) {
 		}
 	}
 	return iface, fmt.Errorf("Couldn't find interface with IP address %s", ip)
+}
+
+// If the configured IP moves off the detected interface (perhaps because it
+// got bridged), it causes communication issues for us. To address this, we
+// exit and allow the service to be restarted where it will detect the new
+// interface for the IP.
+func IfaceCheck(ip net.IP, iface net.Interface, ifaceChanged chan struct{}) {
+	for {
+		i, err := FindIface(ip)
+		if err != nil || i.Name != iface.Name {
+			log.Printf("mdns-publish: Detected interface changed, exiting.")
+			close(ifaceChanged)
+			return
+		}
+		time.Sleep(5 * time.Second)
+	}
 }
 
 func SetLogLevel(level logrus.Level) {
