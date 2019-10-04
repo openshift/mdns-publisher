@@ -16,7 +16,11 @@ func Publish(ip net.IP, iface net.Interface, service Service, shutdown chan stru
 	defer waitGroup.Done()
 	svcEntry := zeroconf.NewServiceEntry(service.Name, service.SvcType, service.Domain)
 	svcEntry.Port = service.Port
-	svcEntry.AddrIPv4 = append(svcEntry.AddrIPv4, ip)
+	if ip.To4() != nil {
+		svcEntry.AddrIPv4 = append(svcEntry.AddrIPv4, ip)
+	} else {
+		svcEntry.AddrIPv6 = append(svcEntry.AddrIPv6, ip)
+	}
 	svcEntry.HostName = service.HostName
 	log.WithFields(logrus.Fields{
 		"name": svcEntry.Instance,
