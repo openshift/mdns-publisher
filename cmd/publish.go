@@ -93,8 +93,8 @@ var publishCmd = &cobra.Command{
 		go publisher.IfaceCheck(ip, iface, ifaceChanged)
 
 		select {
-			case <-sig:
-			case <-ifaceChanged:
+		case <-sig:
+		case <-ifaceChanged:
 		}
 		close(shutdownChannel)
 		log.Info("Shutdown request received, gracefully shutting down services...")
