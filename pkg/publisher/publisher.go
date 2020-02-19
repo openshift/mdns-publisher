@@ -48,23 +48,25 @@ func Publish(ip net.IP, iface net.Interface, service Service, shutdown chan stru
 }
 
 func FindIface(ip net.IP) (iface net.Interface, err error) {
-	ifaces, err := net.Interfaces()
+	var nw networkInterfacer = networkInterface{}
+	return findIface(ip, nw)
+}
+
+func findIface(ip net.IP, nw networkInterfacer) (iface net.Interface, err error) {
+	ifaces, err := nw.Interfaces()
 	if err != nil {
 		log.Printf("[ERR] mdns-publish: Failed retrieving system network interfaces %v.", err)
 		return iface, err
 	}
 	for _, i := range ifaces {
-		addrs, err := i.Addrs()
+		addrs, err := nw.Addrs(&i)
 		if err != nil {
 			log.Printf("[ERR] mdns-publish: Failed retrieving network addresses for interface %s: %v.", i.Name, err)
 		}
 		for _, addr := range addrs {
-			var currIP net.IP
-			switch v := addr.(type) {
-			case *net.IPNet:
-				currIP = v.IP
-			case *net.IPAddr:
-				currIP = v.IP
+			currIP, _, err := net.ParseCIDR(addr.String())
+			if err != nil {
+				continue
 			}
 			if currIP == nil {
 				continue
@@ -82,9 +84,9 @@ func FindIface(ip net.IP) (iface net.Interface, err error) {
 // got bridged), it causes communication issues for us. To address this, we
 // exit and allow the service to be restarted where it will detect the new
 // interface for the IP.
-func IfaceCheck(ip net.IP, iface net.Interface, ifaceChanged chan struct{}) {
+func ifaceCheck(ip net.IP, iface net.Interface, nw networkInterfacer, ifaceChanged chan struct{}) {
 	for {
-		i, err := FindIface(ip)
+		i, err := findIface(ip, nw)
 		if err != nil || i.Name != iface.Name {
 			log.Printf("mdns-publish: Detected interface changed, exiting.")
 			close(ifaceChanged)
@@ -94,6 +96,31 @@ func IfaceCheck(ip net.IP, iface net.Interface, ifaceChanged chan struct{}) {
 	}
 }
 
+func IfaceCheck(ip net.IP, iface net.Interface, ifaceChanged chan struct{}) {
+	var nw networkInterfacer = networkInterface{}
+	ifaceCheck(ip, iface, nw, ifaceChanged)
+}
+
 func SetLogLevel(level logrus.Level) {
 	log.SetLevel(level)
+}
+
+// networkInterfacer defines an interface for several net library functions. Production
+// code will forward to net library functions, and unit tests will override the methods
+// for testing purposes.
+type networkInterfacer interface {
+	Addrs(intf *net.Interface) ([]net.Addr, error)
+	Interfaces() ([]net.Interface, error)
+}
+
+// networkInterface implements the networkInterfacer interface for production code, just
+// wrapping the underlying net library function calls.
+type networkInterface struct{}
+
+func (_ networkInterface) Addrs(intf *net.Interface) ([]net.Addr, error) {
+	return intf.Addrs()
+}
+
+func (_ networkInterface) Interfaces() ([]net.Interface, error) {
+	return net.Interfaces()
 }
