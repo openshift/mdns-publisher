@@ -6,3 +6,5 @@ reviewers:
 approvers:
   - celebdor
   - cybertron
+component: Networking
+subcomponent: mDNS
