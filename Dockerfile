@@ -1,9 +1,9 @@
-FROM registry.svc.ci.openshift.org/ocp/builder:rhel-8-golang-1.15-openshift-4.6 AS builder
+FROM registry.svc.ci.openshift.org/ocp/builder:rhel-8-golang-1.15-openshift-4.7 AS builder
 WORKDIR /go/src/github.com/openshift/mdns-publisher
 COPY . .
 RUN GO111MODULE=on go build --mod=vendor
 
-FROM registry.svc.ci.openshift.org/ocp/4.6:base
+FROM registry.svc.ci.openshift.org/ocp/4.7:base
 COPY --from=builder /go/src/github.com/openshift/mdns-publisher/mdns-publisher /usr/bin/
 
 ENTRYPOINT ["/usr/bin/mdns-publisher"]
