@@ -162,10 +162,11 @@ const (
 
 // Server structure encapsulates both IPv4/IPv6 UDP connections
 type Server struct {
-	service  *ServiceEntry
-	ipv4conn *ipv4.PacketConn
-	ipv6conn *ipv6.PacketConn
-	ifaces   []net.Interface
+	service       *ServiceEntry
+	ipv4conn      *ipv4.PacketConn
+	ipv6conn      *ipv6.PacketConn
+	ifaces        []net.Interface
+	lastMulticast map[int]time.Time
 
 	shouldShutdown chan struct{}
 	shutdownLock   sync.Mutex
@@ -195,6 +196,7 @@ func newServer(ifaces []net.Interface) (*Server, error) {
 		ifaces:         ifaces,
 		ttl:            3200,
 		shouldShutdown: make(chan struct{}),
+		lastMulticast:  make(map[int]time.Time),
 	}
 
 	return s, nil
@@ -354,8 +356,23 @@ func (s *Server) handleQuery(query *dns.Msg, ifIndex int, from net.Addr) error {
 				err = e
 			}
 		} else {
-			// Send mulicast
-			if e := s.multicastResponse(&resp, ifIndex); e != nil {
+			// According to RFC6762 Section 6:
+			// Multicast DNS responder MUST NOT
+			// (except in the one special case of answering probe queries) multicast
+			// a record on a given interface until at least one second has elapsed
+			// since the last time that record was multicast on that particular
+			// interface
+			now := time.Now()
+			lastTime, exists := s.lastMulticast[ifIndex]
+			if exists && (now.Sub(lastTime) < time.Second) {
+				continue
+			}
+
+			//Send multicast
+			e := s.multicastResponse(&resp, ifIndex)
+			if e == nil {
+				s.lastMulticast[ifIndex] = now
+			} else {
 				err = e
 			}
 		}

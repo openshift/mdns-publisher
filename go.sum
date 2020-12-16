@@ -8,6 +8,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/celebdor/zeroconf v0.0.0-20190404095836-c328d57fca11 h1:VthumoLRWujBLOoUGiCRF1Uyks6lZBHWoxItmkSajqA=
 github.com/celebdor/zeroconf v0.0.0-20190404095836-c328d57fca11/go.mod h1:u+uV1CvldRx3gLkxSL/4KfFGFRmdPWwFJ7lDwdFkCe4=
+github.com/celebdor/zeroconf v0.0.0-20201216161251-bb6c7f37fe7c h1:UVGvsdR4CQXuGFJAzBdny+iyDFGI2M5FzDjsPDx/b3Y=
+github.com/celebdor/zeroconf v0.0.0-20201216161251-bb6c7f37fe7c/go.mod h1:u+uV1CvldRx3gLkxSL/4KfFGFRmdPWwFJ7lDwdFkCe4=
 github.com/cenkalti/backoff v2.1.1+incompatible h1:tKJnvO2kl0zmb/jA5UKAt4VoEVw1qxKWjE/Bpp46npY=
 github.com/cenkalti/backoff v2.1.1+incompatible/go.mod h1:90ReRw6GdpyfrHakVjL/QHaoyV4aDUVVkXQJJJ3NXXM=
 github.com/cespare/xxhash v1.1.0/go.mod h1:XrSqR1VqqWfGrhpAt58auRo0WTKS1nRRg3ghfAqPWnc=
