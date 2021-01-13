@@ -1,6 +1,7 @@
 package publisher
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"net"
 	"sync"
@@ -14,7 +15,8 @@ var log = logrus.New()
 
 func Publish(ip net.IP, iface net.Interface, service Service, shutdown chan struct{}, waitGroup *sync.WaitGroup) (err error) {
 	defer waitGroup.Done()
-	svcEntry := zeroconf.NewServiceEntry(service.Name, service.SvcType, service.Domain)
+	svcName := truncateLongServiceName(service.Name)
+	svcEntry := zeroconf.NewServiceEntry(svcName, service.SvcType, service.Domain)
 	svcEntry.Port = service.Port
 	if ip.To4() != nil {
 		svcEntry.AddrIPv4 = append(svcEntry.AddrIPv4, ip)
@@ -103,6 +105,22 @@ func IfaceCheck(ip net.IP, iface net.Interface, ifaceChanged chan struct{}) {
 
 func SetLogLevel(level logrus.Level) {
 	log.SetLevel(level)
+}
+
+// Service names cannot be longer than 63 characters. If we get a service name
+// that is longer, hash it to 32 characters, and sandwich that between the
+// first 15 and last 16 characters of the original name. This way we preserve
+// the likely unique parts of the name while ensuring it does not exceed
+// the 63 character limit.
+func truncateLongServiceName(serviceName string) (svcName string) {
+	svcName = serviceName
+	if len(svcName) > 63 {
+		value := sha256.Sum256([]byte(svcName))
+		hexValue := fmt.Sprintf("%x", value)[:32]
+		svcName = svcName[:15] + string(hexValue[:]) + svcName[len(svcName)-16:]
+		log.Printf("Truncating long service name '%s' to '%s'", serviceName, svcName)
+	}
+	return svcName
 }
 
 // networkInterfacer defines an interface for several net library functions. Production
