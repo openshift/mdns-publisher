@@ -163,3 +163,23 @@ func (networkInterfaceWithInvalidAddr) Addrs(intf *net.Interface) ([]net.Addr, e
 func (networkInterfaceWithInvalidAddr) Interfaces() ([]net.Interface, error) {
 	return []net.Interface{upIntf}, nil
 }
+
+func TestLongNameTruncation(t *testing.T) {
+	testCases := []struct {
+		tcase    string
+		name     string
+		expected string
+	}{
+		{"short name", "master-0", "master-0"},
+		{"long name", "prefix-someverylongservicenamethatwouldcauseaproblemfordns-suffix", "prefix-somevery47540ff49304816bc5054bb4f3cc9a9clemfordns-suffix"},
+	}
+	for _, tc := range testCases {
+		result := truncateLongServiceName(tc.name)
+		if result != tc.expected {
+			t.Errorf("case[%v]: expected %v, got %v", tc.tcase, tc.expected, result)
+		}
+		if len(result) > 63 {
+			t.Errorf("case[%v]: Truncated name too long: '%v' is %d characters long", tc.tcase, result, len(result))
+		}
+	}
+}
