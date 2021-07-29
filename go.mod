@@ -1,7 +1,7 @@
 module github.com/openshift/mdns-publisher
 
 require (
-	github.com/celebdor/zeroconf v0.0.0-20201216161251-bb6c7f37fe7c
+	github.com/celebdor/zeroconf v0.0.0-20210412110229-8ba34664402f
 	github.com/cenkalti/backoff v2.1.1+incompatible // indirect
 	github.com/miekg/dns v1.1.14 // indirect
 	github.com/sirupsen/logrus v1.4.2

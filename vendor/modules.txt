@@ -1,4 +1,4 @@
-# github.com/celebdor/zeroconf v0.0.0-20201216161251-bb6c7f37fe7c
+# github.com/celebdor/zeroconf v0.0.0-20210412110229-8ba34664402f
 github.com/celebdor/zeroconf
 # github.com/cenkalti/backoff v2.1.1+incompatible
 github.com/cenkalti/backoff

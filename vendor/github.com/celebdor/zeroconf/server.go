@@ -162,11 +162,13 @@ const (
 
 // Server structure encapsulates both IPv4/IPv6 UDP connections
 type Server struct {
-	service       *ServiceEntry
-	ipv4conn      *ipv4.PacketConn
-	ipv6conn      *ipv6.PacketConn
-	ifaces        []net.Interface
-	lastMulticast map[int]time.Time
+	service  *ServiceEntry
+	ipv4conn *ipv4.PacketConn
+	ipv6conn *ipv6.PacketConn
+	ifaces   []net.Interface
+
+	lastMulticastLock sync.Mutex
+	lastMulticast     map[int]time.Time
 
 	shouldShutdown chan struct{}
 	shutdownLock   sync.Mutex
@@ -363,18 +365,23 @@ func (s *Server) handleQuery(query *dns.Msg, ifIndex int, from net.Addr) error {
 			// since the last time that record was multicast on that particular
 			// interface
 			now := time.Now()
-			lastTime, exists := s.lastMulticast[ifIndex]
-			if exists && (now.Sub(lastTime) < time.Second) {
-				continue
-			}
+			func() {
+				s.lastMulticastLock.Lock()
+				defer s.lastMulticastLock.Unlock()
 
-			//Send multicast
-			e := s.multicastResponse(&resp, ifIndex)
-			if e == nil {
-				s.lastMulticast[ifIndex] = now
-			} else {
-				err = e
-			}
+				lastTime, exists := s.lastMulticast[ifIndex]
+				if exists && (now.Sub(lastTime) < time.Second) {
+					return
+				}
+
+				//Send multicast
+				e := s.multicastResponse(&resp, ifIndex)
+				if e == nil {
+					s.lastMulticast[ifIndex] = now
+				} else {
+					err = e
+				}
+			}()
 		}
 	}
 
